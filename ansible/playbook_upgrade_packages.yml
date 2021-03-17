@@ -1,0 +1,17 @@
+---
+- name: Upgrade system (APT) packages
+  hosts: cr10s_octopi
+  become: yes
+  tasks:
+    - name: Update package lists
+      apt:
+        update_cache: yes
+    - name: Upgrade packages
+      apt:
+        upgrade: full
+    - name: Clean package cache
+      apt:
+        autoclean: yes
+    - name: Remove unused dependencies
+      apt:
+        autoremove: yes

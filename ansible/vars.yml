@@ -1,0 +1,4 @@
+hostname: cr10s-octopi
+locale: en_US.UTF-8
+timezone: US/Eastern
+layout: us

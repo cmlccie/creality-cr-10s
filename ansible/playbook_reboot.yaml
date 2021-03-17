@@ -1,0 +1,8 @@
+---
+- name: Reboot Raspberry Pi
+  hosts: cr10s_octopi
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Reboot
+      reboot:

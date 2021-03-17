@@ -1,0 +1,65 @@
+---
+- name: Initialize New Raspberry Pi
+  hosts: uninitialized_octopi
+  vars_files:
+    - vars.yml
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Update raspi-config
+      apt:
+        name: raspi-config
+        state: latest
+        update_cache: yes 
+        cache_valid_time: 3600
+
+    - name: Get hostname
+      shell: "raspi-config nonint get_hostname"
+      register: pi_hostname
+      changed_when: False
+
+    - name: Change hostname
+      shell: "raspi-config nonint do_hostname {{ hostname }}"
+      when: pi_hostname.stdout != hostname
+
+    - name: Change locale
+      shell: "raspi-config nonint do_change_locale {{ locale }}"
+
+    - name: Change timezone
+      shell: "raspi-config nonint do_change_timezone {{ timezone }}"
+
+    - name: Change keyboard layout
+      shell: "raspi-config nonint do_configure_keyboard {{ layout }}"
+
+    - name: Update Hosts File
+      replace:
+        path: /etc/hosts
+        regexp: "octopi$"
+        replace: "{{hostname}}"
+
+    - name: Restart mDNS Service
+      systemd:
+        state: restarted
+        name: avahi-daemon
+
+    - name: Deploy SSH key
+      authorized_key:
+        user: pi
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Disable SSH password authentication
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PasswordAuthentication'
+        line="PasswordAuthentication no"
+        state=present
+        backup=yes
+
+    - name: Allow pi user to have password-less sudo access
+      lineinfile:
+        dest: /etc/sudoers.d/010_pi-nopasswd
+        state: present
+        regexp: '^pi'
+        line: 'pi ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
