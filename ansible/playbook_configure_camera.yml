@@ -1,0 +1,23 @@
+---
+- name: Configure OctoPrint camera
+  hosts: cr10s_octopi
+  vars_files:
+    - vars.yml
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Only use the USB attached camera
+      lineinfile:
+        dest: /boot/octopi.txt
+        regexp: '^#?camera='
+        line: 'camera="usb"'
+        state: present
+        backup: no
+
+    - name: Confgiure USB camera options
+      lineinfile:
+        dest: /boot/octopi.txt
+        regexp: '^#?camera_usb_options='
+        line: 'camera_usb_options="-r 1920x1080 -f 30"'
+        state: present
+        backup: no
